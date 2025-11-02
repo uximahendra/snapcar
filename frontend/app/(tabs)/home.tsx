@@ -27,21 +27,14 @@ export default function HomeScreen() {
     try {
       setLoading(true);
       
-      // Generate session title
-      const timestamp = new Date().toISOString().split('T')[0];
-      const title = `${mode.toUpperCase()}-${timestamp}`;
+      // Set mode in capture store
+      setSession('', mode); // We'll create session later when capturing
       
-      // Create session
-      const session = await sessionAPI.createSession(title, mode);
-      
-      // Set in capture store
-      setSession(session.id, mode);
-      
-      // Navigate to mode selection
+      // Navigate to mode selection immediately
       router.push('/capture/mode');
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to create session');
-      console.error('Create session error:', error);
+      Alert.alert('Error', 'Failed to navigate');
+      console.error('Navigation error:', error);
     } finally {
       setLoading(false);
     }
