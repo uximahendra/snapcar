@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,22 +19,62 @@ export default function CameraScreen() {
   const { selectedAngle, addCapturedImage, currentSessionId } = useCaptureStore();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isWeb, setIsWeb] = useState(false);
+
+  useEffect(() => {
+    setIsWeb(Platform.OS === 'web');
+    // On web, show helper message
+    if (Platform.OS === 'web') {
+      setTimeout(() => {
+        Alert.alert(
+          'Camera on Web',
+          'Camera functionality is limited on web browsers. Please use the gallery picker or test on a mobile device with Expo Go for full camera support.',
+          [{ text: 'OK' }]
+        );
+      }, 500);
+    }
+  }, []);
 
   const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Camera permission is required to capture photos');
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Camera permission is required. Please use the gallery picker instead or grant camera permissions in your device settings.'
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Permission error:', error);
       return false;
     }
-    return true;
   };
 
   const handleCapture = async () => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return;
-
     try {
       setLoading(true);
+      
+      // Check if camera is available
+      const cameraAvailable = await ImagePicker.getCameraPermissionsAsync();
+      
+      if (Platform.OS === 'web') {
+        Alert.alert(
+          'Use Gallery Instead',
+          'Camera is not fully supported in web browsers. Please use the gallery picker button to select an image.',
+          [{ text: 'OK' }]
+        );
+        setLoading(false);
+        return;
+      }
+
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) {
+        setLoading(false);
+        return;
+      }
+
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: 'images' as any,
         allowsEditing: false,
@@ -47,7 +88,10 @@ export default function CameraScreen() {
       }
     } catch (error) {
       console.error('Camera error:', error);
-      Alert.alert('Error', 'Failed to capture photo');
+      Alert.alert(
+        'Camera Error',
+        'Failed to open camera. Please use the gallery picker instead.'
+      );
     } finally {
       setLoading(false);
     }
