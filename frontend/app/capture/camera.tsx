@@ -191,16 +191,20 @@ export default function CameraScreen() {
           </View>
         ) : (
           <View style={styles.captureControls}>
-            <TouchableOpacity style={styles.galleryButton} onPress={handlePickImage}>
-              <Ionicons name="images" size={28} color={colors.white} />
+            <TouchableOpacity 
+              style={[styles.galleryButton, isWeb && styles.galleryButtonHighlight]} 
+              onPress={handlePickImage}
+            >
+              <Ionicons name="images" size={28} color={isWeb ? colors.primaryBlue : colors.white} />
+              {isWeb && <Text style={styles.galleryButtonText}>Gallery</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.shutterButton}
               onPress={handleCapture}
-              disabled={loading}
+              disabled={loading || isWeb}
             >
-              <View style={styles.shutterInner} />
+              <View style={[styles.shutterInner, (loading || isWeb) && styles.shutterDisabled]} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.flashButton}>
