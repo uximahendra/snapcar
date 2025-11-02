@@ -240,6 +240,23 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: colors.white,
   },
+  webBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(23, 160, 240, 0.1)',
+    borderColor: colors.primaryBlue,
+    borderWidth: 1,
+    padding: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: 12,
+    gap: spacing.xs,
+  },
+  webBannerText: {
+    ...typography.small,
+    color: colors.white,
+    flex: 1,
+  },
   cameraView: {
     flex: 1,
     justifyContent: 'center',
@@ -292,6 +309,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  galleryButtonHighlight: {
+    backgroundColor: colors.white,
+    width: 80,
+    borderWidth: 2,
+    borderColor: colors.primaryBlue,
+  },
+  galleryButtonText: {
+    ...typography.small,
+    color: colors.primaryBlue,
+    fontWeight: '600',
+    marginTop: 2,
+  },
   shutterButton: {
     width: 80,
     height: 80,
@@ -309,6 +338,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: colors.primaryDark,
+  },
+  shutterDisabled: {
+    backgroundColor: colors.mutedGray,
+    opacity: 0.5,
   },
   flashButton: {
     width: 56,
