@@ -120,14 +120,6 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* FAB for Quick Access to Gallery */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/(tabs)/gallery')}
-      >
-        <Ionicons name="images" size={28} color={colors.white} />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
