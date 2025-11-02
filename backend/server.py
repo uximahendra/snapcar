@@ -143,7 +143,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
+    except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # Mock enhanced images (base64 placeholders - in production these would be actual images)
