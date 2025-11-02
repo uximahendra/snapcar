@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Image,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,36 +40,61 @@ export default function ModeSelectionScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <View style={styles.angleGrid}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.angleList}>
           {angles.map((angle) => (
             <TouchableOpacity
               key={angle.id}
               style={styles.angleCard}
               onPress={() => handleAngleSelect(angle.id)}
+              activeOpacity={0.7}
             >
-              <View style={styles.angleIcon}>
-                <Ionicons name={angle.icon as any} size={40} color={colors.primaryBlue} />
+              {/* Image Container */}
+              <View style={styles.imageContainer}>
+                <Image 
+                  source={{ uri: angle.image }} 
+                  style={styles.angleImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.imageOverlay} />
               </View>
-              <Text style={styles.angleLabel}>{angle.label}</Text>
+
+              {/* Content Container */}
+              <View style={styles.contentContainer}>
+                <View style={styles.angleInfo}>
+                  <Text style={styles.angleLabel}>{angle.label}</Text>
+                  <Text style={styles.angleDescription}>{angle.description}</Text>
+                </View>
+                <View style={styles.arrowContainer}>
+                  <Ionicons name="chevron-forward" size={24} color={colors.primaryBlue} />
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
 
+        {/* Tips Card */}
         <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>Capture Tips</Text>
+          <View style={styles.tipsHeader}>
+            <Ionicons name="bulb" size={20} color={colors.secondaryTeal} />
+            <Text style={styles.tipsTitle}>Capture Tips</Text>
+          </View>
           <View style={styles.tipsList}>
             <View style={styles.tipItem}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.secondaryTeal} />
+              <Ionicons name="checkmark-circle" size={18} color={colors.secondaryTeal} />
               <Text style={styles.tipText}>Keep 2-3 meters distance from vehicle</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.secondaryTeal} />
+              <Ionicons name="checkmark-circle" size={18} color={colors.secondaryTeal} />
               <Text style={styles.tipText}>Use natural daylight when possible</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.secondaryTeal} />
-              <Text style={styles.tipText}>Follow ghost overlay for alignment</Text>
+              <Ionicons name="checkmark-circle" size={18} color={colors.secondaryTeal} />
+              <Text style={styles.tipText}>Follow the overlay guide for alignment</Text>
             </View>
           </View>
         </View>
@@ -79,6 +107,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primaryDark,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     flexDirection: 'row',
@@ -102,42 +131,73 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.body,
     color: colors.mutedGray,
+    fontSize: 14,
   },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
-  angleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  angleList: {
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
   angleCard: {
-    width: '48%',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 14,
-    padding: spacing.md,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
+    overflow: 'hidden',
+    flexDirection: 'row',
+    height: 100,
   },
-  angleIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  imageContainer: {
+    width: 120,
+    height: '100%',
+    position: 'relative',
+  },
+  angleImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  contentContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  angleInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  angleLabel: {
+    ...typography.h3,
+    color: colors.white,
+    marginBottom: 4,
+  },
+  angleDescription: {
+    ...typography.small,
+    color: colors.mutedGray,
+    lineHeight: 16,
+  },
+  arrowContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(23, 160, 240, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  angleLabel: {
-    ...typography.body,
-    color: colors.white,
-    textAlign: 'center',
-    fontWeight: '600',
   },
   tipsCard: {
     backgroundColor: 'rgba(18, 179, 166, 0.1)',
@@ -146,22 +206,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.secondaryTeal,
   },
+  tipsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+  },
   tipsTitle: {
     ...typography.h3,
     color: colors.white,
-    marginBottom: spacing.sm,
   },
   tipsList: {
     gap: spacing.xs,
   },
   tipItem: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.xs,
   },
   tipText: {
     ...typography.body,
     color: colors.mutedGray,
     flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
