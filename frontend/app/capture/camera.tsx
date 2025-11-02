@@ -98,22 +98,34 @@ export default function CameraScreen() {
   };
 
   const handlePickImage = async () => {
+    console.log('🖼️ Gallery button clicked!');
     try {
       setLoading(true);
+      console.log('🖼️ Launching image library...');
+      
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images' as any,
         allowsEditing: false,
         quality: 0.8,
-        base64: true,
+        base64: false, // Changed to false for web compatibility
       });
+
+      console.log('🖼️ Image picker result:', result);
 
       if (!result.canceled && result.assets[0]) {
         const imageUri = result.assets[0].uri;
+        console.log('✅ Image selected:', imageUri);
         setCapturedImage(imageUri);
+        Alert.alert('Success', 'Image loaded! Tap "Use Photo" to continue.');
+      } else {
+        console.log('❌ Image selection cancelled');
       }
-    } catch (error) {
-      console.error('Pick image error:', error);
-      Alert.alert('Error', 'Failed to pick image');
+    } catch (error: any) {
+      console.error('❌ Pick image error:', error);
+      Alert.alert(
+        'Image Selection',
+        `Error: ${error.message || 'Failed to pick image'}. Please try again.`
+      );
     } finally {
       setLoading(false);
     }
