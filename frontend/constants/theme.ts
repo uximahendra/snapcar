@@ -63,20 +63,92 @@ export const borderRadius = {
 
 export const VEHICLE_ANGLES = {
   exterior: [
-    { id: 'front', label: 'Front', icon: 'car-front' },
-    { id: 'front_left', label: 'Front Left', icon: 'car-front' },
-    { id: 'left', label: 'Left', icon: 'car-side' },
-    { id: 'rear_left', label: 'Rear Left', icon: 'car-back' },
-    { id: 'rear', label: 'Rear', icon: 'car-back' },
-    { id: 'rear_right', label: 'Rear Right', icon: 'car-back' },
-    { id: 'front_right', label: 'Front Right', icon: 'car-front' },
+    { 
+      id: 'front', 
+      label: 'Front View', 
+      icon: 'car-front',
+      image: 'https://images.unsplash.com/photo-1683778782676-2506103ba90e?w=400&q=80',
+      description: 'Capture the full front of the vehicle'
+    },
+    { 
+      id: 'front_left', 
+      label: 'Front Left (3/4)', 
+      icon: 'car-front',
+      image: 'https://images.unsplash.com/photo-1614541385622-3b852280154d?w=400&q=80',
+      description: 'Three-quarter view from front left'
+    },
+    { 
+      id: 'left', 
+      label: 'Left Side', 
+      icon: 'car-side',
+      image: 'https://images.unsplash.com/photo-1670241398875-d3f5978ce2fd?w=400&q=80',
+      description: 'Full side profile view'
+    },
+    { 
+      id: 'rear_left', 
+      label: 'Rear Left (3/4)', 
+      icon: 'car-back',
+      image: 'https://images.unsplash.com/photo-1706863411207-6db2c0393641?w=400&q=80',
+      description: 'Three-quarter view from rear left'
+    },
+    { 
+      id: 'rear', 
+      label: 'Rear View', 
+      icon: 'car-back',
+      image: 'https://images.unsplash.com/photo-1619300027229-337a3361a225?w=400&q=80',
+      description: 'Capture the full rear of the vehicle'
+    },
+    { 
+      id: 'rear_right', 
+      label: 'Rear Right (3/4)', 
+      icon: 'car-back',
+      image: 'https://images.unsplash.com/photo-1625510873508-fd4e72670f5a?w=400&q=80',
+      description: 'Three-quarter view from rear right'
+    },
+    { 
+      id: 'front_right', 
+      label: 'Front Right (3/4)', 
+      icon: 'car-front',
+      image: 'https://images.unsplash.com/photo-1714161830116-3f2490013f96?w=400&q=80',
+      description: 'Three-quarter view from front right'
+    },
   ],
   interior: [
-    { id: 'dashboard', label: 'Dashboard', icon: 'gauge' },
-    { id: 'front_seats', label: 'Front Seats', icon: 'armchair' },
-    { id: 'rear_seats', label: 'Rear Seats', icon: 'armchair' },
-    { id: 'trunk', label: 'Trunk', icon: 'box' },
-    { id: 'door_panels', label: 'Door Panels', icon: 'door-open' },
+    { 
+      id: 'dashboard', 
+      label: 'Dashboard', 
+      icon: 'gauge',
+      image: 'https://images.unsplash.com/photo-1549064233-945d7063292f?w=400&q=80',
+      description: 'Center console and dashboard view'
+    },
+    { 
+      id: 'front_seats', 
+      label: 'Front Seats', 
+      icon: 'armchair',
+      image: 'https://images.unsplash.com/photo-1533630217389-3a5e4dff5683?w=400&q=80',
+      description: 'Driver and passenger seat view'
+    },
+    { 
+      id: 'rear_seats', 
+      label: 'Rear Seats', 
+      icon: 'armchair',
+      image: 'https://images.unsplash.com/photo-1625690180114-5530b1304127?w=400&q=80',
+      description: 'Back seat area view'
+    },
+    { 
+      id: 'trunk', 
+      label: 'Trunk/Boot', 
+      icon: 'box',
+      image: 'https://images.unsplash.com/photo-1683778782578-6dbe29091ebc?w=400&q=80',
+      description: 'Cargo area view'
+    },
+    { 
+      id: 'door_panels', 
+      label: 'Door Panels', 
+      icon: 'door-open',
+      image: 'https://images.unsplash.com/photo-1621639532859-8b26570b96fc?w=400&q=80',
+      description: 'Interior door trim and controls'
+    },
   ],
 };
 
