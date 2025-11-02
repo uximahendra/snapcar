@@ -10,105 +10,72 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useCaptureStore } from '../../store/captureStore';
 import { colors, typography, spacing } from '../../constants/theme';
 
 export default function CameraScreen() {
   const router = useRouter();
-  const { selectedAngle, addCapturedImage, currentSessionId } = useCaptureStore();
+  const { selectedAngle, addCapturedImage } = useCaptureStore();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
   const [isWeb, setIsWeb] = useState(false);
+  const [flash, setFlash] = useState<'off' | 'on'>('off');
+  const cameraRef = useRef<any>(null);
 
   useEffect(() => {
     setIsWeb(Platform.OS === 'web');
-    // On web, show helper message
-    if (Platform.OS === 'web') {
-      setTimeout(() => {
-        Alert.alert(
-          'Camera on Web',
-          'Camera functionality is limited on web browsers. Please use the gallery picker or test on a mobile device with Expo Go for full camera support.',
-          [{ text: 'OK' }]
-        );
-      }, 500);
+    
+    // Request camera permission on mount
+    if (Platform.OS !== 'web' && !permission?.granted) {
+      requestPermission();
     }
   }, []);
 
-  const requestPermissions = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Camera permission is required. Please use the gallery picker instead or grant camera permissions in your device settings.'
-        );
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error('Permission error:', error);
-      return false;
-    }
-  };
-
   const handleCapture = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert(
+        'Use Gallery',
+        'Camera capture is limited on web. Please use the gallery button to select an image.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+        return;
+      }
+    }
+
     try {
-      setLoading(true);
-      
-      // Check if camera is available
-      const cameraAvailable = await ImagePicker.getCameraPermissionsAsync();
-      
-      if (Platform.OS === 'web') {
-        Alert.alert(
-          'Use Gallery Instead',
-          'Camera is not fully supported in web browsers. Please use the gallery picker button to select an image.',
-          [{ text: 'OK' }]
-        );
-        setLoading(false);
-        return;
-      }
-
-      const hasPermission = await requestPermissions();
-      if (!hasPermission) {
-        setLoading(false);
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: 'images' as any,
-        allowsEditing: false,
-        quality: 0.8,
-        base64: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-        setCapturedImage(imageUri);
+      if (cameraRef.current) {
+        console.log('📸 Taking photo...');
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        
+        console.log('✅ Photo captured:', photo.uri);
+        setCapturedImage(photo.uri);
       }
     } catch (error) {
-      console.error('Camera error:', error);
-      Alert.alert(
-        'Camera Error',
-        'Failed to open camera. Please use the gallery picker instead.'
-      );
-    } finally {
-      setLoading(false);
+      console.error('❌ Capture error:', error);
+      Alert.alert('Error', 'Failed to capture photo. Please try again.');
     }
   };
 
   const handlePickImage = async () => {
     console.log('🖼️ Gallery button clicked!');
     try {
-      setLoading(true);
-      console.log('🖼️ Launching image library...');
-      
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: 'images' as any,
         allowsEditing: false,
         quality: 0.8,
-        base64: false, // Changed to false for web compatibility
+        base64: false,
       });
 
       console.log('🖼️ Image picker result:', result);
@@ -117,32 +84,22 @@ export default function CameraScreen() {
         const imageUri = result.assets[0].uri;
         console.log('✅ Image selected:', imageUri);
         setCapturedImage(imageUri);
-        Alert.alert('Success', 'Image loaded! Tap "Use Photo" to continue.');
-      } else {
-        console.log('❌ Image selection cancelled');
       }
     } catch (error: any) {
       console.error('❌ Pick image error:', error);
-      Alert.alert(
-        'Image Selection',
-        `Error: ${error.message || 'Failed to pick image'}. Please try again.`
-      );
-    } finally {
-      setLoading(false);
+      Alert.alert('Error', `Failed to pick image: ${error.message}`);
     }
   };
 
   const handleUsePhoto = () => {
     if (!capturedImage || !selectedAngle) return;
 
-    // Add to capture store
     addCapturedImage({
       id: Date.now().toString(),
       angle: selectedAngle,
       uri: capturedImage,
     });
 
-    // Navigate to preview
     router.push('/capture/preview');
   };
 
@@ -150,6 +107,44 @@ export default function CameraScreen() {
     setCapturedImage(null);
   };
 
+  const toggleFlash = () => {
+    setFlash(flash === 'off' ? 'on' : 'off');
+  };
+
+  // If image captured, show preview
+  if (capturedImage) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.white} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{selectedAngle}</Text>
+          <View style={styles.headerButton} />
+        </View>
+
+        <View style={styles.previewContainer}>
+          <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
+          <View style={styles.angleLabel}>
+            <Text style={styles.angleLabelText}>{selectedAngle}</Text>
+          </View>
+        </View>
+
+        <View style={styles.controls}>
+          <View style={styles.previewControls}>
+            <TouchableOpacity style={styles.secondaryButton} onPress={handleRetake}>
+              <Text style={styles.secondaryButtonText}>Retake</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.primaryButton} onPress={handleUsePhoto}>
+              <Text style={styles.primaryButtonText}>Use Photo</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Camera view with live preview
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -162,7 +157,7 @@ export default function CameraScreen() {
       </View>
 
       {/* Web Notice Banner */}
-      {isWeb && !capturedImage && (
+      {isWeb && (
         <View style={styles.webBanner}>
           <Ionicons name="information-circle" size={20} color={colors.primaryBlue} />
           <Text style={styles.webBannerText}>
@@ -171,60 +166,78 @@ export default function CameraScreen() {
         </View>
       )}
 
-      {/* Camera View */}
+      {/* Camera Preview or Placeholder */}
       <View style={styles.cameraView}>
-        {capturedImage ? (
-          <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
+        {!isWeb && permission?.granted ? (
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing="back"
+            flash={flash}
+          >
+            {/* Angle Overlay Frame */}
+            <View style={styles.overlayContainer}>
+              <View style={styles.ghostOverlay}>
+                <Ionicons name="car-sport-outline" size={120} color={colors.secondaryTeal} />
+              </View>
+              <Text style={styles.hintText}>Position your vehicle within the guide</Text>
+              <Text style={styles.subHintText}>Hold 2-3m away • Avoid direct sunlight</Text>
+            </View>
+          </CameraView>
         ) : (
           <View style={styles.placeholderView}>
-            {/* Ghost Overlay */}
             <View style={styles.ghostOverlay}>
               <Ionicons name="car-sport-outline" size={120} color={colors.secondaryTeal} />
             </View>
             <Text style={styles.hintText}>
-              {isWeb ? 'Select an image from gallery' : 'Position your vehicle within the guide'}
+              {isWeb ? 'Select an image from gallery' : 'Camera permission needed'}
             </Text>
             <Text style={styles.subHintText}>
-              {isWeb ? 'Tap gallery icon below' : 'Hold 2-3m away • Avoid direct sunlight'}
+              {isWeb ? 'Tap gallery icon below' : 'Grant permission to use camera'}
             </Text>
+            {!isWeb && !permission?.granted && (
+              <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+                <Text style={styles.permissionButtonText}>Grant Permission</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
 
       {/* Controls */}
       <View style={styles.controls}>
-        {capturedImage ? (
-          <View style={styles.previewControls}>
-            <TouchableOpacity style={styles.secondaryButton} onPress={handleRetake}>
-              <Text style={styles.secondaryButtonText}>Retake</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={handleUsePhoto}>
-              <Text style={styles.primaryButtonText}>Use Photo</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.captureControls}>
-            <TouchableOpacity 
-              style={[styles.galleryButton, isWeb && styles.galleryButtonHighlight]} 
-              onPress={handlePickImage}
-            >
-              <Ionicons name="images" size={28} color={isWeb ? colors.primaryBlue : colors.white} />
-              {isWeb && <Text style={styles.galleryButtonText}>Gallery</Text>}
-            </TouchableOpacity>
+        <View style={styles.captureControls}>
+          <TouchableOpacity 
+            style={[styles.galleryButton, isWeb && styles.galleryButtonHighlight]} 
+            onPress={handlePickImage}
+          >
+            <Ionicons name="images" size={28} color={isWeb ? colors.primaryBlue : colors.white} />
+            {isWeb && <Text style={styles.galleryButtonText}>Gallery</Text>}
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.shutterButton}
-              onPress={handleCapture}
-              disabled={loading || isWeb}
-            >
-              <View style={[styles.shutterInner, (loading || isWeb) && styles.shutterDisabled]} />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shutterButton}
+            onPress={handleCapture}
+            disabled={isWeb || !permission?.granted}
+          >
+            <View style={[
+              styles.shutterInner, 
+              (isWeb || !permission?.granted) && styles.shutterDisabled
+            ]} />
+          </TouchableOpacity>
 
-            <TouchableOpacity style={styles.flashButton}>
-              <Ionicons name="flash-off" size={28} color={colors.white} />
-            </TouchableOpacity>
-          </View>
-        )}
+          <TouchableOpacity 
+            style={styles.flashButton}
+            onPress={toggleFlash}
+            disabled={isWeb || !permission?.granted}
+          >
+            <Ionicons 
+              name={flash === 'on' ? 'flash' : 'flash-off'} 
+              size={28} 
+              color={isWeb || !permission?.granted ? colors.mutedGray : colors.white} 
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -242,6 +255,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: 60,
     paddingBottom: spacing.sm,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    backgroundColor: 'rgba(11, 23, 34, 0.8)',
   },
   headerButton: {
     width: 40,
@@ -261,9 +280,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.sm,
     marginHorizontal: spacing.md,
+    marginTop: 110,
     marginBottom: spacing.sm,
     borderRadius: 12,
     gap: spacing.xs,
+    zIndex: 5,
   },
   webBannerText: {
     ...typography.small,
@@ -272,11 +293,19 @@ const styles = StyleSheet.create({
   },
   cameraView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#000',
   },
+  camera: {
+    flex: 1,
+  },
+  overlayContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
   placeholderView: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.md,
@@ -288,11 +317,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderStyle: 'dashed',
     marginBottom: spacing.md,
-  },
-  capturedImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
+    backgroundColor: 'rgba(18, 179, 166, 0.1)',
   },
   hintText: {
     ...typography.body,
@@ -305,9 +330,45 @@ const styles = StyleSheet.create({
     color: colors.mutedGray,
     textAlign: 'center',
   },
+  permissionButton: {
+    backgroundColor: colors.primaryBlue,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 12,
+    marginTop: spacing.md,
+  },
+  permissionButtonText: {
+    ...typography.body,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  capturedImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  angleLabel: {
+    position: 'absolute',
+    top: 70,
+    left: spacing.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  angleLabelText: {
+    ...typography.small,
+    color: colors.white,
+    fontWeight: '600',
+  },
   controls: {
     padding: spacing.md,
     paddingBottom: spacing.lg,
+    backgroundColor: colors.primaryDark,
   },
   captureControls: {
     flexDirection: 'row',
