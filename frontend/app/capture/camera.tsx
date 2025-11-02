@@ -148,6 +148,16 @@ export default function CameraScreen() {
         <View style={styles.headerButton} />
       </View>
 
+      {/* Web Notice Banner */}
+      {isWeb && !capturedImage && (
+        <View style={styles.webBanner}>
+          <Ionicons name="information-circle" size={20} color={colors.primaryBlue} />
+          <Text style={styles.webBannerText}>
+            Camera limited on web. Tap gallery icon below to select an image.
+          </Text>
+        </View>
+      )}
+
       {/* Camera View */}
       <View style={styles.cameraView}>
         {capturedImage ? (
@@ -158,8 +168,12 @@ export default function CameraScreen() {
             <View style={styles.ghostOverlay}>
               <Ionicons name="car-sport-outline" size={120} color={colors.secondaryTeal} />
             </View>
-            <Text style={styles.hintText}>Position your vehicle within the guide</Text>
-            <Text style={styles.subHintText}>Hold 2-3m away • Avoid direct sunlight</Text>
+            <Text style={styles.hintText}>
+              {isWeb ? 'Select an image from gallery' : 'Position your vehicle within the guide'}
+            </Text>
+            <Text style={styles.subHintText}>
+              {isWeb ? 'Tap gallery icon below' : 'Hold 2-3m away • Avoid direct sunlight'}
+            </Text>
           </View>
         )}
       </View>
